@@ -1,0 +1,13 @@
+#!/bin/bash
+
+fio --group_reporting					\
+    --runtime=30					\
+    --size=16G						\
+    --name=buffered-sync-append				\
+    --ioengine=sync					\
+    --sync=1						\
+    --numjobs=64					\
+    --rw=write						\
+    --blocksize=4k					\
+    --create_on_open=1					\
+    --file_append=1

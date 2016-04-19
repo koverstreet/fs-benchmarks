@@ -1,0 +1,12 @@
+#!/bin/bash
+
+fio --group_reporting					\
+    --runtime=120					\
+    --size=8G						\
+    --name=dio-randrw-multithreaded			\
+    --ioengine=libaio					\
+    --direct=1						\
+    --iodepth=10					\
+    --rw=randrw						\
+    --blocksize=4k					\
+    --numjobs=6
