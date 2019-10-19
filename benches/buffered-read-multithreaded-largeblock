@@ -1,0 +1,16 @@
+#!/bin/bash
+
+fallocate -l8G test
+dd if=test of=/dev/null bs=8M 2>/dev/null
+
+fio --group_reporting					\
+    --runtime=30					\
+    --name=read						\
+    --ioengine=psync					\
+    --filename=test					\
+    --fallocate=none					\
+    --fadvise_hint=0					\
+    --io_size=64G					\
+    --rw=randread					\
+    --blocksize=1M					\
+    --numjobs=6

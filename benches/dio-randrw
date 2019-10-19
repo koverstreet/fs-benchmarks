@@ -6,6 +6,9 @@ fio --group_reporting					\
     --name=dio-randrw					\
     --ioengine=libaio					\
     --direct=1						\
-    --iodepth=60					\
+    --iodepth=32					\
+    --iodepth_batch_complete_min=1			\
+    --iodepth_batch_complete_max=64			\
     --rw=randrw						\
-    --blocksize=4k
+    --blocksize=4k					\
+    --cpus_allowed=0

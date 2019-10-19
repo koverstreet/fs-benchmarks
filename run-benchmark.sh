@@ -7,29 +7,29 @@ set -o pipefail
 
 BENCHDIR=$(dirname "$(readlink -f "$0")")
 
-FILESYSTEMS="bcache ext4 ext4-no-journal xfs btrfs"
-DEVS="/dev/rssda /dev/sdb /dev/sda5"
-BENCHES="					\
-    dio-randread				\
-    dio-randread-multithreaded			\
-    dio-randwrite				\
-    dio-randwrite-multithreaded			\
-    dio-randwrite-unwritten			\
-    dio-randwrite-multithreaded-unwritten	\
-    dio-randrw					\
-    dio-randrw-multithreaded			\
-    dio-append					\
-    dio-append-one-cpu				\
-    buffered-sync-append"
+FILESYSTEMS="bcachefs bcachefs-no-checksum ext4 ext4-no-journal xfs btrfs"
+
+#DEVS="/dev/rssda /dev/sdb /dev/sda5"
+DEVS="/dev/nvme0n1"
+
+BENCHES=$(cd $BENCHDIR/benches; echo *)
 OUT=""
 MNT=/mnt/run-benchmark
 
+usage()
+{
+    echo "run-benchmark.sh - run benchmarks"
+    echo "  -d devices to test"
+    echo "  -f filesystems to test"
+    echo "  -b benchmarks to run"
+    echo "  -m mountpoint to use (default /mnt/run-benchmark)"
+    echo "  -o benchmark output directory (default /root/results/<date>_\$i/"
+    echo "  -h display this help and exit"
+    exit 0
+}
+
 while getopts "hd:f:b:m:o:" arg; do
     case $arg in
-	h)
-	    usage
-	    exit 0
-	    ;;
 	d)
 	    DEVS=$OPTARG
 	    ;;
@@ -44,6 +44,10 @@ while getopts "hd:f:b:m:o:" arg; do
 	    ;;
 	o)
 	    OUT=$OPTARG
+	    ;;
+	h)
+	    usage
+	    exit 0
 	    ;;
     esac
 done
@@ -68,11 +72,17 @@ full=$OUT/full
 truncate --size 0 $terse
 truncate --size 0 $full
 
-echo "Test output in $OUT:"
+echo "Test output in $OUT"
+
+function cleanup {
+    umount $MNT > /dev/null 2>&1 || true
+}
+trap cleanup SIGINT SIGHUP SIGTERM EXIT
 
 for dev in $DEVS; do
     devname=$(basename $dev)
-    model=$(hdparm -i $dev |tr ',' '\n'|sed -n 's/.*Model=\(.*\)/\1/p')
+    #model=$(hdparm -i $dev |tr ',' '\n'|sed -n 's/.*Model=\(.*\)/\1/p')
+    model=$(cat /sys/block/$devname/device/model)
 
     echo "Device $devname ($model):" |tee -a $terse
 
@@ -85,16 +95,17 @@ for dev in $DEVS; do
 	    printf "        %-16s" $fs: |tee -a $terse
 
 	    $BENCHDIR/prep-benchmark-fs.sh -d $dev -m $MNT -f $fs >/dev/null 2>&1
-	    sleep 30 # quiesce
+	    sleep 30 # quiesce - SSDs are annoying
 	    (cd $MNT; "$BENCHDIR/benches/$bench") > $out
 	    umount $dev
 
 	    echo "**** Device $devname ($model) filesystem $fs benchmark $benchname:" >> $full
 	    cat $out >> $full
+
 	    echo >> $full
 
-	    sed -rne '/iops/ s/ +([[:alpha:]]+) ?:.*iops=([0-9]+).*/\1 \2/ p' $out|
-		awk '{printf("%8s %8d iops", $1, $2)} END {printf("\n")}'|
+	    sed -rne '/IOPS/ s/ +([[:alpha:]]+) ?:.*IOPS=([^,]+).*/\1 \2/ p' $out|
+		awk '{printf("%8s %8s iops", $1, $2)} END {printf("\n")}'|
 		tee -a $terse
 	done
     done

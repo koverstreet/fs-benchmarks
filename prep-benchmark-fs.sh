@@ -23,17 +23,17 @@ while getopts "hd:m:f:" arg; do
     esac
 done
 
-if [[ -z $DEV ]]; then
+if [[ -z ${DEV-} ]]; then
     echo "Required parameter -d missing: device to test"
     exit 1
 fi
 
-if [[ -z $MNT ]]; then
+if [[ -z ${MNT-} ]]; then
     echo "Required parameter -m missing: mount point"
     exit 1
 fi
 
-if [[ -z $FS ]]; then
+if [[ -z ${FS-} ]]; then
     echo "Required parameter -f missing: filesystem type"
     exit 1
 fi
@@ -41,23 +41,27 @@ fi
 umount $DEV >/dev/null 2>&1 || true
 umount $MNT >/dev/null 2>&1 || true
 
-blkdiscard -s	$DEV >/dev/null 2>&1 ||
-    blkdiscard	$DEV >/dev/null 2>&1 ||
-    true
+blkdiscard $DEV >/dev/null 2>&1 || true
 
 case $FS in
-    bcache)
-	wipefs -a $DEV
-	bcache format			\
-	    --error_action=panic	\
-	    --data_csum_type=none	\
-	    --cache $DEV
+    bcachefs)
+	bcachefs format -f		\
+	    --errors=panic		\
+	    $DEV
+	;;
+    bcachefs-no-checksum)
+	bcachefs format -f		\
+	    --errors=panic		\
+	    --data_checksum=none	\
+	    $DEV
+	FS=bcachefs
 	;;
     ext4)
 	mkfs.ext4 -F $DEV
 	;;
     ext4-no-journal)
 	mkfs.ext4 -F -O ^has_journal $DEV
+	FS=ext4
 	;;
     xfs)
 	mkfs.xfs -f $DEV
@@ -67,4 +71,4 @@ case $FS in
 	;;
 esac
 
-mount $DEV $MNT
+mount -t $FS $DEV $MNT

@@ -9,4 +9,5 @@ fio --group_reporting					\
     --iodepth=64					\
     --rw=randwrite					\
     --blocksize=4k					\
+    --cpus_allowed=0					\
     --overwrite=1
