@@ -1,5 +1,8 @@
 #!/bin/bash
 
+dd if=/dev/zero of=test bs=16M count=1024 oflag=direct 2>/dev/null
+
+#perf record -a -F max -o /root/perf.data --		\
 fio --group_reporting					\
     --runtime=210					\
     --size=16G						\
@@ -9,4 +12,4 @@ fio --group_reporting					\
     --iodepth=64					\
     --rw=randread					\
     --blocksize=4k					\
-    --cpus_allowed=0
+    --filename=test

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+dd if=/dev/zero of=test bs=16M count=1024 oflag=direct 2>/dev/null
+
+fio --group_reporting					\
+    --runtime=210					\
+    --size=16G						\
+    --name=buffered-read				\
+    --ioengine=psync					\
+    --rw=read						\
+    --blocksize=128k					\
+    --cpus_allowed=0					\
+    --filename=test

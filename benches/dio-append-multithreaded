@@ -1,0 +1,14 @@
+#!/bin/bash
+
+fio --group_reporting					\
+    --runtime=30					\
+    --size=16G						\
+    --name=dio-append					\
+    --ioengine=libaio					\
+    --direct=1						\
+    --numjobs=64					\
+    --rw=write						\
+    --blocksize=4k					\
+    --create_on_open=1					\
+    --numjobs=6						\
+    --file_append=1

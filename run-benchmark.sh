@@ -95,7 +95,7 @@ for dev in $DEVS; do
 	    printf "        %-16s" $fs: |tee -a $terse
 
 	    $BENCHDIR/prep-benchmark-fs.sh -d $dev -m $MNT -f $fs >/dev/null 2>&1
-	    sleep 30 # quiesce - SSDs are annoying
+	    sleep 10 # quiesce - SSDs are annoying
 	    (cd $MNT; "$BENCHDIR/benches/$bench") > $out
 	    umount $dev
 
