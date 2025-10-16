@@ -3,7 +3,7 @@
 dd if=/dev/zero of=test bs=16M count=1024 oflag=direct 2>/dev/null
 
 #perf record -a -F max -o /root/perf.data --		\
-fio --group_reporting					\
+fio --output-format=json+ --group_reporting					\
     --runtime=60					\
     --size=16G						\
     --name=dio-randwrite				\

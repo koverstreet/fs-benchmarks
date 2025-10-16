@@ -3,7 +3,7 @@
 fallocate -l8G test
 dd if=test of=/dev/null bs=8M 2>/dev/null
 
-fio --group_reporting					\
+fio --output-format=json+ --group_reporting					\
     --runtime=30					\
     --name=read						\
     --ioengine=psync					\
