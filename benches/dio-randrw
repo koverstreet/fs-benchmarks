@@ -1,6 +1,6 @@
 #!/bin/bash
 
-fio --group_reporting					\
+fio --output-format=json+ --group_reporting					\
     --runtime=120					\
     --size=16G						\
     --name=dio-randrw					\
